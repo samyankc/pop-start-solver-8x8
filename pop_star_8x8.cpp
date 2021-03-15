@@ -1,5 +1,3 @@
-#include "pop_star_score.h"
-#include "constants.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -12,9 +10,10 @@
 #include <mutex>
 #include <algorithm>
 
-#include <index_range.h>
-#include <small_vector.h>
-
+#include "includes/index_range.h"
+#include "includes/small_vector.h"
+#include "includes/pop_star_score.h"
+#include "includes/constants.h"
 
 using namespace std;
 using namespace popstar;
