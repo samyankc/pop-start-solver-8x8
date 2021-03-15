@@ -8,19 +8,27 @@ namespace index_range
     template<typename T>
     struct SelfReferencing {
         T self_;
-        constexpr T operator*() { return self_; } 
+        constexpr T operator*() { return self_; }
         constexpr operator T&(){ return self_; }
         constexpr operator const T&() const { return self_; }
     };
 
+    //template<typename Iter, typename Guide = AdvancementGuide<Iter> >
     template<typename Iter>
     struct ForwardIter
     {
         Iter current_;
-        constexpr decltype(auto) operator*() { return *current_; }
+        constexpr auto operator+=( auto n ) { return this->current_ += n, *this; }
+        constexpr auto operator++() { return *this += +1; }
+        constexpr auto operator--() { return *this += -1; }
+        /*
+        constexpr auto Advance( auto n ) { return current_ += n, *this; }
+        constexpr auto operator+=( auto n ) { Advance( n ); }
+        constexpr auto operator++() { return Advance( 1 ); }
+        constexpr auto operator--() { return Advance( -1 ); }
+        */
+        constexpr decltype( auto ) operator*() { return *current_; }
         constexpr bool operator!=( const ForwardIter& rhs ) const { return current_ != rhs.current_; }
-        constexpr auto operator++() { return ++current_, *this; }
-        constexpr auto operator--() { return --current_, *this; }
     };
 
     template<typename Iter>
@@ -28,8 +36,15 @@ namespace index_range
     {
         constexpr ReverseIter( Iter src ) : ForwardIter<Iter>( --src ) {}
         // shadowing parent's overloads
-        constexpr auto operator++() { return --this->current_, *this; }
-        constexpr auto operator--() { return ++this->current_, *this; }
+        constexpr auto operator+=( auto n ) { return this->current_ += -n, *this; }
+        constexpr auto operator++() { return *this += +1; }
+        constexpr auto operator--() { return *this += -1; }
+        /*
+        using ForwardIter<Iter>::Advance;
+        constexpr auto operator+=( auto n ) { Advance( -n ); }
+        constexpr auto operator++() { return Advance( -1 ), *this; }
+        constexpr auto operator--() { return Advance( 1 ), *this; }
+        */
     };
 
     template<typename Iter>
@@ -76,8 +91,6 @@ namespace index_range
     {
         return ReverseRange( Container.begin(), Container.end() );
     }
-
-
 
     constexpr auto operator|( auto& Container, Drop Amount )
     {
