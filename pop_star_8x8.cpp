@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -14,6 +15,7 @@
 #include "includes/small_vector.h"
 #include "includes/pop_star_score.h"
 #include "includes/constants.h"
+
 
 using namespace std;
 using namespace popstar;
@@ -302,10 +304,10 @@ namespace Operational
         
         for ( auto y : All | Reverse() )
         {
-            out << "\n " << y << "  ";
+            out << "\n " << y << " ";
             for ( auto x : All ) out << (char)(CurrentPuzzle( x, y ) ==0? ' ' : '0'+CurrentPuzzle( x, y ) ) << ' ';
         }
-        out << "\n\n   ";
+        out << "\n  ";
         for ( auto x : All ) out << " " << x;
         out << "\n\n";
         return out;
