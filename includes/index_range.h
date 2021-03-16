@@ -6,45 +6,38 @@
 namespace index_range
 {
     template<typename T>
-    struct SelfReferencing {
+    struct SelfReferencing
+    {
         T self_;
+        constexpr SelfReferencing( T src ) : self_{ src } {}
         constexpr T operator*() { return self_; }
         constexpr operator T&(){ return self_; }
         constexpr operator const T&() const { return self_; }
     };
 
-    //template<typename Iter, typename Guide = AdvancementGuide<Iter> >
-    template<typename Iter>
-    struct ForwardIter
+    template<typename Iter, typename CRTP>
+    struct IterOperator
     {
         Iter current_;
-        constexpr auto operator+=( auto n ) { return this->current_ += n, *this; }
-        constexpr auto operator++() { return *this += +1; }
-        constexpr auto operator--() { return *this += -1; }
-        /*
-        constexpr auto Advance( auto n ) { return current_ += n, *this; }
-        constexpr auto operator+=( auto n ) { Advance( n ); }
-        constexpr auto operator++() { return Advance( 1 ); }
-        constexpr auto operator--() { return Advance( -1 ); }
-        */
-        constexpr decltype( auto ) operator*() { return *current_; }
-        constexpr bool operator!=( const ForwardIter& rhs ) const { return current_ != rhs.current_; }
+        constexpr IterOperator( Iter src ) : current_( src ) {}
+        constexpr decltype( auto ) operator*() { return *static_cast<CRTP&>( *this ).current_; }
+        constexpr bool operator!=( const CRTP& rhs ) const { return static_cast<const CRTP&>( *this ).current_ != rhs.current_; }
+        constexpr auto operator++() { return static_cast<CRTP&>( *this ) += +1; }
+        constexpr auto operator--() { return static_cast<CRTP&>( *this ) += -1; }
     };
 
     template<typename Iter>
-    struct ReverseIter : ForwardIter<Iter>
+    struct ForwardIter : IterOperator<Iter, ForwardIter<Iter> >
     {
-        constexpr ReverseIter( Iter src ) : ForwardIter<Iter>( --src ) {}
-        // shadowing parent's overloads
+        constexpr ForwardIter( Iter src ) : IterOperator<Iter,ForwardIter<Iter> >( src ) {}
+        constexpr auto operator+=( auto n ) { return this->current_ += n, *this; }
+    };
+
+    template<typename Iter>
+    struct ReverseIter : IterOperator<Iter, ReverseIter<Iter> >
+    {
+        constexpr ReverseIter( Iter src ) : IterOperator<Iter,ReverseIter<Iter> >( --src ) {}
         constexpr auto operator+=( auto n ) { return this->current_ += -n, *this; }
-        constexpr auto operator++() { return *this += +1; }
-        constexpr auto operator--() { return *this += -1; }
-        /*
-        using ForwardIter<Iter>::Advance;
-        constexpr auto operator+=( auto n ) { Advance( -n ); }
-        constexpr auto operator++() { return Advance( -1 ), *this; }
-        constexpr auto operator--() { return Advance( 1 ), *this; }
-        */
     };
 
     template<typename Iter>
@@ -71,7 +64,7 @@ namespace index_range
     template<typename T, typename Iter = ForwardIter<SelfReferencing<T> > >
     struct Range : RangeTemplate<Iter>
     {
-        constexpr Range( T first, T last ) : RangeTemplate<Iter>( { first }, { last + 1 } ) {}
+        constexpr Range( T first, T last ) : RangeTemplate<Iter>( Iter{ first }, Iter{ last + 1 } ) {}
         constexpr Range( T distance ) : Range( 0, distance - 1 ) {}
     };
 
